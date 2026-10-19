@@ -1,0 +1,205 @@
+<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Integrated Banking, Accounting &amp; P&amp;L System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px);--bg:#f4f6f9;--s:#fff;--tx:#1a1f2b;--mu:#667085;--bd:#dfe3ea;--ac:#1f5eff;--g:#12805c;--r:#c0392b;--y:#e8a400}
+@media(prefers-color-scheme:dark){:root{--bg:#10131a;--s:#181c25;--tx:#e8ebf2;--mu:#98a1b3;--bd:#2a3040;--ac:#6b93ff;--g:#3ecf9a;--r:#ff7b6b;--y:#f2c14e}}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--tx);font:13px/1.45 Arial,Helvetica,sans-serif}
+header{display:flex;flex-wrap:wrap;gap:10px;align-items:center;padding:12px 16px;background:var(--s);border-bottom:1px solid var(--bd)}
+h1{font-size:16px;margin:0;flex:1 1 260px}
+nav{display:flex;gap:4px;overflow-x:auto;padding:8px 16px;background:var(--s);border-bottom:1px solid var(--bd)}
+nav button{white-space:nowrap;border:0;background:none;color:var(--mu);padding:7px 12px;border-radius:6px;cursor:pointer;font:inherit}
+nav button.on{background:var(--ac);color:#fff}
+main{padding:16px;max-width:1500px;margin:auto}
+button,select,input{font:inherit;color:var(--tx)}
+.b,.bar button{background:var(--ac);color:#fff;border:0;border-radius:6px;padding:6px 12px;cursor:pointer}
+.b.o{background:none;color:var(--ac);border:1px solid var(--ac)}
+input,select{background:var(--s);border:1px solid var(--bd);border-radius:5px;padding:4px 6px}
+.mu{color:var(--mu)}
+.bar{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.sc{overflow-x:auto;max-height:68vh;overflow-y:auto;background:var(--s);border:1px solid var(--bd);border-radius:8px}
+table{border-collapse:collapse;width:100%}
+th{position:sticky;top:0;background:var(--bg);text-align:left;font-size:11px;text-transform:uppercase;color:var(--mu);padding:7px 8px;white-space:nowrap;border-bottom:1px solid var(--bd)}
+td{padding:2px 4px;border-bottom:1px solid var(--bd);white-space:nowrap}
+td input,td select{width:118px;border-color:transparent;background:transparent}
+td input:focus,td select:focus{border-color:var(--ac);background:var(--s)}
+td.cv{background:rgba(31,94,255,.07);text-align:right;padding:4px 8px;font-variant-numeric:tabular-nums}
+.x{background:none;border:0;color:var(--r);cursor:pointer;font-size:16px}
+.k{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-bottom:14px}
+.c{background:var(--s);border:1px solid var(--bd);border-radius:8px;padding:12px 14px}
+.c small{display:block;color:var(--mu);text-transform:uppercase;font-size:10.5px}
+.c b{font-size:20px;font-variant-numeric:tabular-nums}
+.g2{display:grid;grid-template-columns:repeat(auto-fit,minmax(340px,1fr));gap:12px;margin-bottom:14px}
+.c h3{margin:0 0 8px;font-size:13px}
+.p{max-width:100%;overflow-x:auto}
+.al{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bd)}
+.bd{padding:1px 9px;border-radius:10px;color:#fff;font-weight:bold}
+.pl td{padding:6px 10px;text-align:right}.pl td:first-child{text-align:left}.pl tr:last-child td{font-weight:bold}
+.pos{color:var(--g)}.neg{color:var(--r)}
+svg text{fill:var(--mu);font-size:10px}.s0{fill:var(--ac)}.s1{fill:var(--y)}.s2{fill:var(--g)}
+.lg span{margin-right:12px}.lg i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:4px}
+.ro td input,.ro td select,.ro [data-add],.ro .x{pointer-events:none;opacity:.55}
+</style></head><body>
+<header><h1>Integrated Banking, Accounting &amp; P&amp;L System<br><span class="mu" style="font-weight:normal">2 companies · 4 brands · all amounts excl. GST unless stated</span></h1>
+<label class="mu">Period <input type="month" id="per"></label><span id="st" class="mu">Loading…</span>
+<button class="b o" id="lo">Sign out</button><button class="b o" id="imp">Import .xlsx</button><button class="b" id="exp">Export .xlsx</button><input type="file" id="fi" accept=".xlsx" hidden></header>
+<nav id="nav"></nav><main id="app"></main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script>
+const V=['X Nail','Nail Emporium','MakeMeArtist/Aveda','Mall of Salon Ecom','Corporate / Shared'],CO=['ONE STOP MALL OF SALON PVT LTD','HDK BEUTY I PVT LTD'],YN=['Yes','No'],
+OFF=['X Nail Wing','X Nail Exclusive','Nail Emporium rights','Nail Emporium franchise','MakeMeArtist/Aveda','Mall of Salon Ecom'],
+TY=['Revenue','COGS','Opex','Capex','Asset','Inventory','Capital','Intercompany','GST','Loan','Transfer'],CAT=['Revenue','COGS','Opex','Non-P&L'],MD=['Cash','UPI','Bank','Card','Cheque'];
+const num=v=>{const x=parseFloat(v);return isNaN(x)?0:x},has=v=>v!==''&&v!=null&&!isNaN(parseFloat(v)),
+esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])),
+f=n=>(n<0?'-':'')+'₹'+Math.abs(Math.round(n)).toLocaleString('en-IN'),
+sm=(r,ks)=>ks.some(k=>has(r[k]))?ks.reduce((a,k)=>a+num(r[k]),0):'',pct=(a,b)=>b?(a/b*100).toFixed(1)+'%':'0.0%',
+mo=d=>(d||'').slice(0,7),today=new Date().toISOString().slice(0,10);
+const SH={
+assump:{n:'Assumptions',cols:[['offer','Vertical / Offer','s',OFF],['fee','Franchise Fee ₹','n'],['stock','Stock ₹','n'],['furn','Furniture ₹','n'],['mkt','Marketing ₹','n'],['int','Interior / Other ₹','n'],['launch','Launch Budget ₹','c',r=>sm(r,['stock','furn','mkt','int'])],['rtgs','MOS→HDK RTGS ₹','n'],['cm','Comments','t']]},
+tx:{n:'Transactions',cols:[['date','Date','d'],['month','Month','c',r=>mo(r.date)],['co','Company','s',CO],['vert','Vertical','s',V],['br','Branch / Store','t'],['doc','Document / Invoice','t'],['party','Counterparty','t'],['type','Type','s',TY],['cat','Category','s',CAT],['head','Account / Expense Head','t'],['desc','Description','t'],['net','Net amount ₹','n'],['gst','GST amount ₹','n'],['total','Total amount ₹','c',r=>has(r.net)?num(r.net)+num(r.gst):''],['mode','Payment mode','s',MD],['ledger','Bank / Cash ledger','t'],['ay','Approval Yogesh','s',YN],['av','Approval Vikas','s',YN],['utr','Bank ref / UTR','t'],['rec','Reconciled?','s',YN],['rem','Remarks','t']]},
+daily:{n:'Daily Store MIS',cols:[['date','Date','d'],['co','Company','s',CO],['vert','Vertical','s',V],['br','Branch','t'],['cash','Cash sales ₹','n'],['upi','UPI ₹','n'],['card','Card ₹','n'],['bt','Bank transfer ₹','n'],['tot','Total receipts ₹','c',r=>sm(r,['cash','upi','card','bt'])],['cexp','Cash expenses ₹','n'],['oth','Other payments ₹','n'],['close','Closing cash ₹','c',r=>has(r.cash)||has(r.upi)||has(r.card)||has(r.bt)?num(r.cash)-num(r.cexp):''],['pos','POS / Tally match?','s',YN],['bank','Bank match?','s',YN],['rev','Reviewed by','t'],['exc','Exceptions','t']]},
+hr:{n:'HR Branch Control',cols:[['id','Employee ID','t'],['emp','Employee','t'],['co','Company','s',CO],['vert','Vertical','s',V],['city','City / Branch','t'],['role','Role','t'],['join','Join date','d'],['of','Offer letter?','s',YN],['kyc','KYC docs?','s',YN],['bk','Bank verified?','s',YN],['ctc','Monthly CTC ₹','n'],['bud','Branch budget ₹','n'],['att','Attendance days','n'],['pm','Payroll month','m'],['pay','Salary payable ₹','c',r=>has(r.ctc)&&has(r.att)?num(r.ctc)*num(r.att)/30:''],['pd','Paid date','d'],['st','Status / notes (salary target 7th)','t']]},
+roi:{n:'Franchise ROI',cols:[['id','Franchise ID','t'],['pn','Partner / name','t'],['vert','Vertical','s',V],['co','Company','s',CO],['ref','Agreement link / ref','t'],['sg','Agreement signed?','s',YN],['sd','Start date','d'],['tm','ROI terms (contract)','t'],['due','ROI due ₹','n'],['month','ROI month','m'],['day','Credit target day','n'],['paid','Paid ₹','n'],['pd','Paid date','d'],['utr','UTR / bank proof','t'],['var','Variance ₹','c',r=>has(r.due)?num(r.due)-num(r.paid):''],['status','Status (auto)','c',r=>!has(r.due)?'':num(r.paid)>=num(r.due)?'Paid':num(r.paid)>0?'Part paid':'Due']]},
+bank:{n:'Bank Transfers',cols:[['date','Date','d'],['fc','From company','s',CO],['fb','From bank','t'],['tc','To company','s',CO],['tb','To bank','t'],['amt','Amount ₹','n'],['utr','UTR / reference','t'],['why','Reason / agreement','t'],['ay','Approved Yogesh','s',YN],['av','Approved Vikas','s',YN],['sl','Sender ledger entry','s',YN],['rl','Receiver ledger entry','s',YN],['rec','Reconciled','s',YN],['nt','Notes','t']]},
+act:{n:'Activations',cols:[['id','Activation ID','t'],['date','Date','d'],['offer','Product / offer','s',OFF],['partner','Partner','t'],['bco','Company billing partner','s',CO],['fee','Fee contracted ₹','n'],['coll','Fee collected ₹','n'],['stock','Stock actual ₹','n'],['furn','Furniture actual ₹','n'],['mkt','Marketing actual ₹','n'],['int','Interior / other ₹','n'],['tl','Total launch cost ₹','c',r=>sm(r,['stock','furn','mkt','int'])],['sur','Commercial surplus ₹','c',r=>has(r.fee)&&has(sm(r,['stock','furn','mkt','int']))?num(r.fee)-sm(r,['stock','furn','mkt','int']):''],['bud','MOS→HDK budget ₹','n'],['rtgs','Actual RTGS ₹','n'],['bal','Balance to transfer ₹','c',r=>has(r.bud)?num(r.bud)-num(r.rtgs):''],['gst','GST / recognition status','t'],['rem','Remarks','t']]}};
+let FS='';const vtl=()=>S.vt.map(v=>v.name),frl=()=>S.fz.map(f=>f.name),otl=()=>S.ot.map(o=>o.name),vt=n=>S.vt.find(v=>v.name===n)||{};
+Object.assign(SH,{
+vt:{n:'Verticals & Rates',cols:[['name','Vertical','t'],['mg','MG ROI % (monthly, on investment)','n'],['comm','Commission % (on outlet sales)','n'],['nt','Notes','t']]},
+fz:{n:'Franchises',cols:[['name','Franchise','t'],['model','Model','s',['FOCO']],['vert','Vertical chosen','s',vtl],['pn','Partner / contact','t'],['sd','Start date','d'],['nt','Notes','t']]},
+ot:{n:'Outlets',cols:[['name','Outlet (unique name)','t'],['vert','Vertical','s',vtl],['loc','Location','t'],['area','Area','t'],['fr','Franchise','s',frl],['inv','Investment ₹ (MG base)','n'],['start','Start date (MG accrues from)','d'],['stt','Status','s',['Active','Inactive']]]},
+sl:{n:'Daily Sales (Outlet)',cols:[['date','Date','d'],['outlet','Outlet','s',otl],['fr','Franchise','c',r=>(S.ot.find(o=>o.name===r.outlet)||{}).fr||''],['sales','Sales ₹','n'],['exp','Outlet expenses ₹','n'],['rm','Remarks','t']]},
+fp:{n:'Franchise Payments',cols:[['date','Payment date','d'],['fr','Franchise','s',frl],['month','ROI month','m'],['amt','Amount paid ₹','n'],['utr','UTR / bank proof','t'],['nt','Notes','t']]}});
+const NK=['sl','fp','vt','fz','ot'];
+const TABS=[['dash','Dashboard'],['fr','Franchise Dashboard'],['pl','P&L'],...NK.concat(Object.keys(SH).filter(k=>!NK.includes(k))).map(k=>[k,SH[k].n]),['guide','Guide']];
+const seed=()=>({period:'2026-10',tx:[],daily:[],hr:[],roi:[],bank:[],act:[],assump:[
+{offer:'X Nail Wing',fee:310000,stock:60000,furn:20000,mkt:20000,rtgs:100000,cm:'Wing: ₹1,00,000 launch budget and RTGS stated.'},
+{offer:'X Nail Exclusive',fee:1000000,rtgs:600000,cm:'₹6,00,000 RTGS stated; cost breakup not provided.'},
+{offer:'Nail Emporium rights',fee:150000,cm:'New store rights with MOS franchisee, MMA academy or retail partner; cost unspecified.'},
+{offer:'Nail Emporium franchise',fee:1500000,rtgs:600000,cm:'₹6,00,000 RTGS stated; launch cost unspecified.'},
+{offer:'MakeMeArtist/Aveda',cm:'Business model economics and entity allocation pending.'},
+{offer:'Mall of Salon Ecom',cm:'Business model economics and entity allocation pending.'}]});
+let S;try{S=JSON.parse(localStorage.getItem('mis_v2'))}catch(e){}S=S||seed();
+const seed2=()=>({vt:[{name:'1A - X Nail Exclusive',nt:'Vertical 1: X Nail Cloud (FOCO). Enter MG % and Commission %.'},{name:'1B - X Nail Wings',nt:'Vertical 1: X Nail Cloud (FOCO). Enter MG % and Commission %.'}],fz:[{name:'Franchise A',model:'FOCO',vert:'1A - X Nail Exclusive'},{name:'Franchise B',model:'FOCO',vert:'1B - X Nail Wings'},{name:'Franchise C',model:'FOCO',vert:'1B - X Nail Wings'}],ot:[{name:'X Nail Exclusive - Outlet 1',vert:'1A - X Nail Exclusive',fr:'Franchise A',stt:'Active'},{name:'X Nail Wing - Area-1',vert:'1B - X Nail Wings',loc:'Location-A',area:'Area-1',fr:'Franchise C',stt:'Active'},{name:'X Nail Wing - Area-2',vert:'1B - X Nail Wings',loc:'Location-A',area:'Area-2',fr:'Franchise C',stt:'Active'},{name:'X Nail Wing - Area-3',vert:'1B - X Nail Wings',loc:'Location-B',area:'Area-3',fr:'Franchise B',stt:'Active'}],sl:[],fp:[]});
+const mig=()=>{const D=seed2();for(const k in D)if(!S[k])S[k]=D[k]};mig();
+let tab='dash',Q={},db=null,tm;
+const st=t=>document.getElementById('st').textContent=t;
+
+function auto(k,r,fl){if(k==='ot'&&fl==='fr'){const x=S.fz.find(z=>z.name===r.fr);if(x&&!r.vert)r.vert=x.vert}if(k==='tx'&&fl==='type')r.cat=['Revenue','COGS','Opex'].includes(r.type)?r.type:'Non-P&L';
+if(k==='act'&&fl==='offer'){const a=S.assump.find(x=>x.offer===r.offer);if(a){if(!has(r.fee)&&has(a.fee))r.fee=a.fee;if(!has(r.bud)&&has(a.rtgs))r.bud=a.rtgs}}}
+const sumTx=(P,cat,fn)=>S.tx.filter(r=>mo(r.date)===P&&r.cat===cat&&fn(r)).reduce((a,r)=>a+num(r.net),0);
+function pl(P,fk,list){const rows=list.map(n=>{const rv=sumTx(P,'Revenue',r=>r[fk]===n),cg=sumTx(P,'COGS',r=>r[fk]===n),ox=sumTx(P,'Opex',r=>r[fk]===n);return{n,rv,cg,gp:rv-cg,ox,eb:rv-cg-ox}});
+return rows.concat([rows.reduce((a,r)=>{for(const k in r)if(k!=='n')a[k]+=r[k];return a},{n:'TOTAL',rv:0,cg:0,gp:0,ox:0,eb:0})])}
+function plT(rows,first){return '<div class="c p"><table class="pl"><tr><th>'+first+'</th><th>Revenue</th><th>COGS</th><th>Gross profit</th><th>Opex</th><th>EBITDA</th><th>GM %</th><th>Net %</th></tr>'+rows.map(r=>'<tr><td>'+esc(r.n)+'</td><td>'+f(r.rv)+'</td><td>'+f(r.cg)+'</td><td>'+f(r.gp)+'</td><td>'+f(r.ox)+'</td><td class="'+(r.eb<0?'neg':'pos')+'">'+f(r.eb)+'</td><td>'+pct(r.gp,r.rv)+'</td><td>'+pct(r.eb,r.rv)+'</td></tr>').join('')+'</table></div>'}
+function bars(lab,ser){const W=640,H=210,vs=ser.flat(),mx=Math.max(0,...vs)||1,mn=Math.min(0,...vs),h=H-50,y=v=>10+(mx-v)/(mx-mn||1)*h,n=lab.length,g=W/n,bw=Math.min(28,(g-12)/ser.length);
+let o='<svg viewBox="0 0 '+W+' '+H+'" width="100%"><line x1="0" x2="'+W+'" y1="'+y(0)+'" y2="'+y(0)+'" stroke="currentColor" opacity=".25"/>';
+lab.forEach((l,i)=>{ser.forEach((s,j)=>{const v=s[i],a=y(v),b=y(0),x=i*g+(g-bw*ser.length)/2+j*bw;o+='<rect class="s'+j+'" x="'+x+'" y="'+Math.min(a,b)+'" width="'+(bw-2)+'" height="'+Math.max(1,Math.abs(a-b))+'" rx="2"><title>'+esc(l)+': '+f(v)+'</title></rect>'});o+='<text x="'+(i*g+g/2)+'" y="'+(H-14)+'" text-anchor="middle">'+esc(l.length>13?l.slice(0,12)+'…':l)+'</text>'});return o+'</svg>'}
+const lg=a=>'<div class="lg mu">'+a.map((x,i)=>'<span><i class="s'+i+'" style="background:var(--'+['ac','y','g'][i]+')"></i>'+x+'</span>').join('')+'</div>';
+function dash(){const P=S.period,pv=pl(P,'vert',V),T=pv[pv.length-1],ms=[];for(let i=5;i>=0;i--){const d=new Date(P+'-01');d.setMonth(d.getMonth()-i);ms.push(d.toISOString().slice(0,7))}
+const tr=ms.map(m=>{const rv=sumTx(m,'Revenue',()=>1),ox=sumTx(m,'COGS',()=>1)+sumTx(m,'Opex',()=>1);return[rv,ox,rv-ox]});
+const dm=S.daily.filter(r=>mo(r.date)===P),rc=k=>dm.reduce((a,r)=>a+num(r[k]),0),rt=rc('cash')+rc('upi')+rc('card')+rc('bt'),
+pay=S.hr.filter(r=>r.pm===P).reduce((a,r)=>a+(has(r.ctc)&&has(r.att)?num(r.ctc)*num(r.att)/30:0),0),
+roiO=S.roi.reduce((a,r)=>a+(has(r.due)?num(r.due)-num(r.paid):0),0),sur=S.act.reduce((a,r)=>a+(has(r.fee)&&has(sm(r,['stock','furn','mkt','int']))?num(r.fee)-sm(r,['stock','furn','mkt','int']):0),0),
+bal=S.act.reduce((a,r)=>a+(has(r.bud)?num(r.bud)-num(r.rtgs):0),0),cm=today.slice(0,7),dd=+today.slice(8);
+const K=[['Revenue',f(T.rv)],['Gross profit',f(T.gp),pct(T.gp,T.rv)+' GM'],['Opex',f(T.ox)],['EBITDA',f(T.eb),pct(T.eb,T.rv)+' net'],['Receipts (Daily MIS)',f(rt)],['Payroll payable',f(pay)],['ROI outstanding',f(roiO)],['Activation surplus',f(sur)],['RTGS balance to transfer',f(bal)]];
+const A=[['Transactions awaiting dual approval',S.tx.filter(r=>has(r.net)&&(r.ay!=='Yes'||r.av!=='Yes')).length],['Transactions not reconciled',S.tx.filter(r=>has(r.net)&&r.rec!=='Yes').length],['Intercompany entries without UTR',S.tx.filter(r=>r.type==='Intercompany'&&!r.utr).length],
+['Bank transfers not reconciled',S.bank.filter(r=>r.rec!=='Yes').length],['ROI payments overdue',S.roi.filter(r=>has(r.due)&&num(r.due)>num(r.paid)&&(r.month<cm||(r.month===cm&&dd>num(r.day||5)))).length],
+['Salaries unpaid for period (target 7th)',S.hr.filter(r=>r.pm===P&&has(r.ctc)&&!r.pd).length],['Employees with incomplete documents',S.hr.filter(r=>r.of!=='Yes'||r.kyc!=='Yes'||r.bk!=='Yes').length],['Daily MIS mismatches (POS / bank)',S.daily.filter(r=>r.pos==='No'||r.bank==='No').length],['Activations with RTGS balance',S.act.filter(r=>has(r.bud)&&num(r.bud)>num(r.rtgs)).length]];
+const oh={};S.tx.filter(r=>mo(r.date)===P&&r.cat==='Opex').forEach(r=>oh[r.head||'(unclassified)']=(oh[r.head||'(unclassified)']||0)+num(r.net));
+return '<div class="k">'+K.map(x=>'<div class="c"><small>'+x[0]+'</small><b>'+x[1]+'</b>'+(x[2]?'<div class="mu">'+x[2]+'</div>':'')+'</div>').join('')+'</div><div class="g2"><div class="c"><h3>Vertical P&amp;L — '+P+'</h3>'+bars(V,[pv.slice(0,5).map(r=>r.rv),pv.slice(0,5).map(r=>r.ox),pv.slice(0,5).map(r=>r.eb)])+lg(['Revenue','Opex','EBITDA'])+'</div><div class="c"><h3>6-month trend</h3>'+bars(ms,[tr.map(x=>x[0]),tr.map(x=>x[1]),tr.map(x=>x[2])])+lg(['Revenue','COGS+Opex','Profit'])+'</div><div class="c"><h3>Collections by mode — '+P+'</h3>'+bars(['Cash','UPI','Card','Bank'],[[rc('cash'),rc('upi'),rc('card'),rc('bt')]])+'</div><div class="c"><h3>Control alerts</h3>'+A.map(a=>'<div class="al"><span>'+a[0]+'</span><span class="bd" style="background:var(--'+(a[1]?'r':'g')+')">'+a[1]+'</span></div>').join('')+'</div></div><div class="c"><h3>Opex by account head — '+P+'</h3>'+(Object.keys(oh).length?'<table class="pl">'+Object.entries(oh).sort((a,b)=>b[1]-a[1]).map(e=>'<tr><td>'+esc(e[0])+'</td><td>'+f(e[1])+'</td><td>'+pct(e[1],T.ox)+'</td></tr>').join('')+'</table>':'<span class="mu">No Opex posted for this period.</span>')+'</div>'}
+function mlist(o,P){if(o.start){const a=[],e=new Date(P+'-01');let d=new Date(mo(o.start)+'-01');while(d<=e){a.push(d.toISOString().slice(0,7));d.setMonth(d.getMonth()+1)}return a}return[...new Set(S.sl.filter(r=>r.outlet===o.name&&mo(r.date)<=P).map(r=>mo(r.date)))]}
+function calc(o,m){const v=vt(o.vert),s=S.sl.filter(r=>r.outlet===o.name&&mo(r.date)===m),sales=s.reduce((a,r)=>a+num(r.sales),0),ex=s.reduce((a,r)=>a+num(r.exp),0),cm=sales*num(v.comm)/100,mg=mlist(o,m).includes(m)?num(o.inv)*num(v.mg)/100:0;return{sales,ex,cm,mg,pay:Math.max(cm,mg),basis:cm||mg?(mg>cm?'MG':'Commission'):'-'}}
+function frDash(){const P=S.period,frs=S.fz.filter(x=>!FS||x.name===FS),os=S.ot.filter(o=>frs.some(x=>x.name===o.fr)),
+R=os.map(o=>({o,c:calc(o,P),cum:mlist(o,P).reduce((a,m)=>a+calc(o,m).pay,0)})),
+paidOf=n=>S.fp.filter(p=>p.fr===n&&(p.month||mo(p.date))<=P).reduce((a,p)=>a+num(p.amt),0),
+T=R.reduce((a,r)=>({s:a.s+r.c.sales,cm:a.cm+r.c.cm,mg:a.mg+r.c.mg,pay:a.pay+r.c.pay,ex:a.ex+r.c.ex}),{s:0,cm:0,mg:0,pay:0,ex:0}),
+paid=frs.reduce((a,x)=>a+paidOf(x.name),0),cum=R.reduce((a,r)=>a+r.cum,0),ms=[];
+for(let i=5;i>=0;i--){const d=new Date(P+'-01');d.setMonth(d.getMonth()-i);ms.push(d.toISOString().slice(0,7))}
+const tr=ms.map(m=>{let s=0,p=0;os.forEach(o=>{const c=calc(o,m);s+=c.sales;p+=c.pay});return[s,p]}),
+K=[['Sales',f(T.s)],['Commission',f(T.cm)],['MG (minimum guarantee)',f(T.mg)],['Franchise income (higher of MG / commission)',f(T.pay)],['Outlet expenses',f(T.ex)],['Company share (sales − income)',f(T.s-T.pay)],['Paid to date',f(paid)],['Outstanding to date',f(cum-paid)]],
+nr=S.vt.filter(v=>!has(v.mg)&&!has(v.comm)).length;
+return '<div class="bar"><label>Franchise <select data-fs="1"><option value="">All franchises</option>'+S.fz.map(x=>'<option'+(x.name===FS?' selected':'')+'>'+esc(x.name)+'</option>').join('')+'</select></label><span class="mu">Period '+P+' · income per outlet = higher of MG and commission</span></div>'+(nr?'<p class="neg">Set MG % and Commission % for each vertical in Verticals &amp; Rates; income shows zero until then.</p>':'')
++'<div class="k">'+K.map(x=>'<div class="c"><small>'+x[0]+'</small><b>'+x[1]+'</b></div>').join('')+'</div><div class="g2"><div class="c"><h3>Sales vs franchise income — 6 months</h3>'+bars(ms,[tr.map(x=>x[0]),tr.map(x=>x[1])])+lg(['Sales','Franchise income'])+'</div><div class="c"><h3>Outlet-wise — '+P+'</h3>'+(R.length?bars(R.map(r=>r.o.name),[R.map(r=>r.c.sales),R.map(r=>r.c.pay)])+lg(['Sales','Franchise income']):'<span class="mu">No outlets mapped.</span>')+'</div></div>'
++'<h3>Franchise summary</h3><div class="c p"><table class="pl"><tr><th>Franchise</th><th>Vertical</th><th>Outlets</th><th>Sales</th><th>Income</th><th>Paid to date</th><th>Outstanding</th></tr>'+frs.map(x=>{const rr=R.filter(r=>r.o.fr===x.name),cu=rr.reduce((a,r)=>a+r.cum,0),pd=paidOf(x.name);return '<tr><td>'+esc(x.name)+'</td><td>'+esc(x.vert||'')+'</td><td>'+rr.length+'</td><td>'+f(rr.reduce((a,r)=>a+r.c.sales,0))+'</td><td>'+f(rr.reduce((a,r)=>a+r.c.pay,0))+'</td><td>'+f(pd)+'</td><td>'+f(cu-pd)+'</td></tr>'}).join('')+'</table></div>'
++'<h3>Outlet detail</h3><div class="c p"><table class="pl"><tr><th>Outlet</th><th>Franchise</th><th>Location / Area</th><th>Sales</th><th>Commission</th><th>MG</th><th>Income</th><th>Basis</th><th>Expenses</th></tr>'+R.map(r=>'<tr><td>'+esc(r.o.name)+'</td><td>'+esc(r.o.fr)+'</td><td>'+esc((r.o.loc||'')+' / '+(r.o.area||''))+'</td><td>'+f(r.c.sales)+'</td><td>'+f(r.c.cm)+'</td><td>'+f(r.c.mg)+'</td><td>'+f(r.c.pay)+'</td><td>'+r.c.basis+'</td><td>'+f(r.c.ex)+'</td></tr>').join('')+'</table></div>'
++'<h3>Daily sales — '+P+'</h3><div class="c p"><table class="pl"><tr><th>Date</th><th>Outlet</th><th>Sales</th><th>Expenses</th><th>Remarks</th></tr>'+S.sl.filter(r=>mo(r.date)===P&&os.some(o=>o.name===r.outlet)).sort((a,b)=>b.date<a.date?-1:1).map(r=>'<tr><td>'+esc(r.date)+'</td><td>'+esc(r.outlet)+'</td><td>'+f(num(r.sales))+'</td><td>'+f(num(r.exp))+'</td><td style="text-align:left">'+esc(r.rm||'')+'</td></tr>').join('')+'</table></div>'}
+function plPage(){return '<p class="mu">Uses only Category = Revenue / COGS / Opex for the selected period. Intercompany, GST and Capex are excluded.</p><h3>Vertical P&amp;L — '+S.period+'</h3>'+plT(pl(S.period,'vert',V),'Vertical')+'<h3>Legal entity P&amp;L — '+S.period+'</h3>'+plT(pl(S.period,'co',CO),'Legal entity')}
+const GD=[['Franchise model','Income per outlet per month = higher of MG (Investment × MG ROI %) and Commission (Sales × Commission %); rates are set vertical-wise in Verticals & Rates. MG accrues from the outlet start date; without a start date, only months with sales entries count. Masters: Verticals, Franchises, Outlets (one franchise can own many outlets). Enter Daily Sales per outlet and Franchise Payments; the Franchise Dashboard calculates the rest.'],['Purpose','Central MIS for 2 companies and 4 brands. Books and bank reconciliation remain legally separate per company.'],['Assumptions','Commercial inputs; validate exclusive launch cost, entity ownership, GST treatment.'],['Transactions','Enter every approved item, excluding GST. Do not duplicate bank movements as expenses. Category auto-sets from Type; Month auto-derives from Date.'],['P&L','Change period at the top. Only Revenue, COGS, Opex rows count.'],['Daily MIS','Store / bank-wise daily collections; reconcile against cash book, POS and bank.'],['Activations','Selecting an offer auto-fills fee and MOS→HDK budget from Assumptions. Profit is a commercial estimate, not statutory.'],['HR','Salary = CTC × attendance ÷ 30. Target payment date: 7th. Post payroll into Transactions for P&L.'],['Franchise ROI','Status and variance auto-calculate; credit target day defaults to 5 (proposed, not an enforceable obligation).'],['Bank Transfers','Intercompany needs UTR, contract and mirror postings in each entity.'],['Approval control','Yogesh and Vikas: both approvals tracked; confirm whether one or both are required.'],['Important','Blank means unknown, not zero. Franchise fee is not earned until recognition conditions are met.'],['Storage','Data saves automatically (shared online when signed in, else browser). Export .xlsx for backup.']];
+function cell(k,i,r,c){const[key,,t,o]=c,v=r[key]??'';if(t==='c'){const x=o(r);return '<td class="cv">'+(typeof x==='number'?f(x):esc(x))+'</td>'}
+const a=' data-k="'+k+'" data-i="'+i+'" data-f="'+key+'"';
+if(t==='s')return '<td><select'+a+'><option></option>'+(typeof o==='function'?o():o).map(x=>'<option'+(x===v?' selected':'')+'>'+esc(x)+'</option>').join('')+'</select></td>';
+return '<td><input'+a+' type="'+({n:'number',d:'date',m:'month'}[t]||'text')+'" value="'+esc(v)+'"'+(t==='n'?' step="any"':'')+'></td>'}
+function table(k){const sh=SH[k],q=(Q[k]||'').toLowerCase();let h='<div class="bar"><button data-add="'+k+'">+ Add row</button>'+(ADM?'<button data-apall="'+k+'">Approve all pending</button>':'')+'<input data-q="'+k+'" placeholder="Filter (press Enter)" value="'+esc(Q[k]||'')+'"><span class="mu">'+S[k].length+' rows</span></div><div class="sc"><table><thead><tr><th>#</th><th>Status</th>'+sh.cols.map(c=>'<th>'+c[1]+'</th>').join('')+'<th></th></tr></thead><tbody>';
+S[k].forEach((r,i)=>{if(q&&!JSON.stringify(r).toLowerCase().includes(q))return;h+='<tr><td>'+(i+1)+'</td>'+stCell(k,i,r)+sh.cols.map(c=>cell(k,i,r,c)).join('')+'<td><button class="x" data-del="'+k+':'+i+'">×</button></td></tr>'});return h+'</tbody></table></div>'}
+function render(){const sc=document.querySelector('.sc'),x=sc?[sc.scrollLeft,sc.scrollTop]:0;
+document.getElementById('nav').innerHTML=tabs().map(t=>'<button data-t="'+t[0]+'"'+(t[0]===tab?' class="on"':'')+'>'+t[1]+'</button>').join('');
+document.getElementById('per').value=S.period;
+document.getElementById('app').innerHTML=tab==='dash'?AP(dash):tab==='fr'?AP(frDash):tab==='pl'?AP(plPage):tab==='appr'?apprPage():tab==='aud'?audPage():tab==='usr'?usrPage():tab==='guide'?'<div class="c p"><table class="pl">'+GD.map(g=>'<tr><td><b>'+g[0]+'</b></td><td style="text-align:left;white-space:normal">'+g[1]+'</td></tr>').join('')+'</table></div>':table(tab);
+const n=document.querySelector('.sc');if(n&&x){n.scrollLeft=x[0];n.scrollTop=x[1]}}
+document.addEventListener('click',e=>{const d=e.target.dataset;if(d.t){tab=d.t;render()}
+if(d.add){const r={};if(d.add==='roi')r.day=5;if(['tx','daily','bank','act','sl','fp'].includes(d.add))r.date=today;r._id=uid();S[d.add].push(r);render()}
+if(d.del&&confirm('Delete this row?')){const[k,i]=d.del.split(':');const dr=S[k].splice(+i,1)[0];rm(k,dr&&dr._id);render()}});
+document.addEventListener('change',e=>{const t=e.target,d=t.dataset;if(t.id==='per'){S.period=t.value||S.period;try{localStorage.setItem('mis_p',S.period)}catch(e){}render()}
+else if(d.fs!==undefined){FS=t.value;render()}
+else if(d.q!==undefined){Q[d.q]=t.value;render()}
+else if(d.f){const r=S[d.k][d.i];r[d.f]=t.type==='number'&&t.value!==''?parseFloat(t.value):t.value;auto(d.k,r,d.f);up(d.k,r);render()}});
+const cv=v=>v instanceof Date?v.getFullYear()+'-'+String(v.getMonth()+1).padStart(2,'0')+'-'+String(v.getDate()).padStart(2,'0'):v;
+document.getElementById('exp').onclick=async()=>{try{const wb=XLSX.utils.book_new();
+for(const k in SH){const sh=SH[k];XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([sh.cols.map(c=>c[1])].concat(S[k].map(r=>sh.cols.map(c=>c[2]==='c'?c[3](r):r[c[0]]??'')))),sh.n)}
+for(const[nm,fk,li]of[['Monthly P&L','vert',V],['Entity P&L','co',CO]])XLSX.utils.book_append_sheet(wb,XLSX.utils.aoa_to_sheet([['Period',S.period],[nm.split(' ')[0],'Revenue','COGS','Gross profit','Opex','EBITDA']].concat(pl(S.period,fk,li).map(r=>[r.n,r.rv,r.cg,r.gp,r.ox,r.eb]))),nm);
+XLSX.writeFile(wb,'Integrated_MIS_'+S.period+'.xlsx')}catch(e){alert('Export failed: '+(e.message||e.code))}};
+document.getElementById('imp').onclick=()=>document.getElementById('fi').click();
+document.getElementById('fi').onchange=async e=>{try{const wb=XLSX.read(await e.target.files[0].arrayBuffer(),{cellDates:true});
+for(const k in SH){const ws=wb.Sheets[SH[k].n];if(!ws)continue;const rows=XLSX.utils.sheet_to_json(ws,{header:1,raw:true,defval:''}).slice(1);
+S[k]=S[k].concat(rows.map(a=>{const r={};SH[k].cols.forEach((c,i)=>{if(c[2]!=='c'&&a[i]!==''&&a[i]!=null)r[c[0]]=cv(a[i])});return r}).filter(r=>Object.keys(r).length).map(r=>({...r,_id:uid()})))}
+await bulk();render()}catch(x){alert('Import failed: '+x.message)}e.target.value=''};
+let ROLE='',USER='',ADM=false,inflight=0,AUD=null,AQ='',USR=null;
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,8);
+function showLogin(){document.getElementById('nav').innerHTML='';document.getElementById('app').innerHTML='<div class="c" style="max-width:320px;margin:60px auto"><h3>Sign in</h3><p><input id="lu" placeholder="Username" style="width:100%"></p><p><input id="lp" type="password" placeholder="Password" style="width:100%"></p><button class="b" id="lg">Sign in</button></div>'}
+async function api(p,o){const r=await fetch('/api/'+p,o?{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(o)}:{});const j=await r.json().catch(()=>({}));
+if(r.status===401&&p!=='login'){showLogin();throw new Error('auth')}if(!r.ok){const e=new Error(j.error||('Error '+r.status));e.meta=j.meta;throw e}return j}
+async function send(ops){inflight++;st('Saving…');let ch=false;const ap=j=>(j.meta||[]).forEach(m=>{const r=(S[m.sheet]||[]).find(x=>x._id===m.id);if(r){if(r._st!==m.m._st)ch=true;Object.assign(r,m.m)}});
+try{ap(await api('ops',{ops}));st(USER+' ('+ROLE+') · saved')}catch(e){if(e.message!=='auth'){ap(e);st('Not saved');alert('Change not saved: '+e.message);await pull().catch(()=>{})}}finally{inflight--;if(ch)render()}}
+const up=(k,r)=>send([{op:'upsert',sheet:k,row:r}]),rm=(k,id)=>{if(id)send([{op:'delete',sheet:k,id}])};
+const bulk=()=>{const ops=[];for(const k of Object.keys(SH))S[k].forEach(r=>{if(!r._st&&r._id&&Object.keys(r).length>2)ops.push({op:'upsert',sheet:k,row:r})});return ops.length?send(ops):0};
+async function pull(first){const j=await api('state');let keep=[];if(!first)keep=Object.keys(SH).map(k=>[k,(S[k]||[]).filter(r=>!r._st)]);
+if(j.empty){if(ROLE!=='superadmin'){document.getElementById('app').innerHTML='<p class="c">System not initialised. The superadmin must sign in first.</p>';return}
+const D=Object.assign(seed(),seed2());delete D.period;for(const k of Object.keys(SH))(D[k]||(D[k]=[])).forEach(r=>r._id=uid());S=(await api('bootstrap',{state:D})).state}else S=j.state;
+for(const k of Object.keys(SH))if(!Array.isArray(S[k]))S[k]=[];keep.forEach(([k,a])=>S[k].push(...a));
+try{S.period=localStorage.getItem('mis_p')||today.slice(0,7)}catch(e){S.period=today.slice(0,7)}st(USER+' ('+ROLE+')');render()}
+async function boot(){try{const m=await api('me');ROLE=m.role;USER=m.username;ADM=['admin','superadmin'].includes(ROLE);document.body.classList.toggle('ro',ROLE==='viewer');AUD=null;USR=null;await pull(true)}catch(e){if(e.message!=='auth')st(e.message)}}
+function stCell(k,i,r){const s=r._st||'Draft',c={Approved:'g',Pending:'y',Rejected:'r',Draft:'mu'}[s];
+return '<td><span class="bd" style="background:var(--'+c+')" title="'+esc((r._ap?'By '+r._ap+' '+(r._at||'').slice(0,16).replace('T',' '):'')+(r._rn?' | '+r._rn:'')+(r._by?' | Entered by '+r._by:''))+'">'+s+'</span>'+(ADM&&(s==='Pending'||s==='Rejected')?' <button class="x" style="color:var(--g)" data-ap="'+k+':'+i+':approve" title="Approve">&#10003;</button>'+(s==='Pending'?'<button class="x" data-ap="'+k+':'+i+':reject" title="Reject">&#10007;</button>':''):'')+'</td>'}
+function tabs(){const pn=Object.keys(SH).reduce((a,k)=>a+(S[k]||[]).filter(r=>r._st==='Pending').length,0),T=TABS.slice(),x=[];
+if(ADM)x.push(['appr','Approvals ('+pn+')'],['aud','Audit Report']);if(ROLE==='superadmin')x.push(['usr','Users']);T.splice(3,0,...x);return T}
+function AP(fn){const raw=S,v={...raw};let pn=0;for(const k of Object.keys(SH))if(Array.isArray(raw[k])){v[k]=raw[k].filter(r=>r._st==='Approved');pn+=raw[k].filter(r=>r._st==='Pending').length}
+S=v;try{return '<p class="mu">Figures include approved records only.'+(pn?' <b class="neg">'+pn+' record(s) pending approval are excluded.</b>':'')+'</p>'+fn()}finally{S=raw}}
+async function aprv(s){const[k,i,a]=s.split(':'),r=S[k][+i];let note='';if(a==='reject'){note=prompt('Reason for rejection');if(note===null)return}
+const j=await api('approve',{sheet:k,id:r._id,action:a,note});Object.assign(r,j.m);render()}
+async function aprvAll(k){if(!confirm('Approve all pending records in this sheet?'))return;await api('approve',{sheet:k,id:'*',action:'approve'});await pull()}
+function apprPage(){let h='<div class="c p"><table class="pl"><tr><th>Sheet</th><th>Record</th><th>Entered / changed by</th><th>When</th><th>Action</th></tr>',n=0;
+for(const k of Object.keys(SH))S[k].forEach((r,i)=>{if(r._st!=='Pending')return;n++;h+='<tr><td>'+SH[k].n+'</td><td style="text-align:left;white-space:normal">'+esc(SH[k].cols.filter(c=>c[2]!=='c'&&r[c[0]]!==''&&r[c[0]]!=null).slice(0,6).map(c=>c[1]+': '+r[c[0]]).join(' | '))+'</td><td>'+esc(r._by||'')+'</td><td>'+esc((r._ua||'').slice(0,16).replace('T',' '))+'</td><td><button class="x" style="color:var(--g)" data-ap="'+k+':'+i+':approve">Approve</button> <button class="x" data-ap="'+k+':'+i+':reject">Reject</button></td></tr>'});
+return n?h+'</table></div>':'<p class="mu">No records pending approval.</p>'}
+async function loadAud(){try{AUD=await api('audit?limit=2000')}catch(e){AUD={rows:[],total:0}}render()}
+function audPage(){if(!AUD){loadAud();return '<p class="mu">Loading audit log...</p>'}const q=AQ.toLowerCase(),R=AUD.rows.filter(r=>!q||JSON.stringify(r).toLowerCase().includes(q)).slice(0,500);
+return '<div class="bar"><input data-aq="1" placeholder="Filter by user, sheet, record, action (press Enter)" value="'+esc(AQ)+'" style="min-width:280px"><button class="b o" data-aref="1">Refresh</button><button class="b o" data-aver="1">Verify integrity</button><button class="b" data-acsv="1">Export CSV</button><span class="mu">'+AUD.total+' entries (append-only, hash-chained)</span></div><div class="sc"><table><thead><tr>'+['Time','User','Role','Sheet','Record','Action','Field','Old','New / note','Status before'].map(h=>'<th>'+h+'</th>').join('')+'</tr></thead><tbody>'+R.map(r=>'<tr>'+[new Date(r.ts).toLocaleString('en-IN'),r.user,r.role,(SH[r.sheet]||{}).n||r.sheet,r.ref||'',r.action,r.field||'',r.old||'',r.new||r.note||'',r.prev_status||''].map(v=>'<td title="'+esc(v)+'" style="max-width:240px;overflow:hidden;text-overflow:ellipsis">'+esc(v)+'</td>').join('')+'</tr>').join('')+'</tbody></table></div>'}
+function usrPage(){if(!USR){api('users').then(j=>{USR=j;render()}).catch(()=>{});return '<p class="mu">Loading users...</p>'}const R=['superadmin','admin','entry','viewer'];
+return '<div class="bar"><input id="nu1" placeholder="username"><input id="nu2" type="password" placeholder="password (min 8)"><select id="nu3">'+R.map(r=>'<option>'+r+'</option>').join('')+'</select><button class="b" data-nu="1">Add user</button></div><div class="c p"><table class="pl"><tr><th>User</th><th>Role</th><th>Active</th><th></th></tr>'+USR.map(u=>'<tr><td>'+esc(u.username)+'</td><td><select data-ur="'+esc(u.username)+'">'+R.map(r=>'<option'+(r===u.role?' selected':'')+'>'+r+'</option>').join('')+'</select></td><td><input type="checkbox" data-ua="'+esc(u.username)+'"'+(u.active?' checked':'')+'></td><td><button class="b o" data-up="'+esc(u.username)+'">Reset password</button></td></tr>').join('')+'</table></div><p class="mu">superadmin: everything including users. admin: approve and audit report. entry: enter and edit; every change needs approval. viewer: read only.</p>'}
+document.addEventListener('click',async e=>{const t=e.target,d=t.dataset;try{
+if(t.id==='lg'){await api('login',{username:document.getElementById('lu').value,password:document.getElementById('lp').value});await boot()}
+else if(t.id==='lo'){await api('logout',{});location.reload()}
+else if(d.ap)await aprv(d.ap);else if(d.apall)await aprvAll(d.apall);
+else if(d.aref){AUD=null;render()}
+else if(d.aver){const j=await api('audit/verify');alert(j.ok?'Audit log intact: '+j.total+' entries verified.':'INTEGRITY FAILURE at entry '+j.brokenAt+'. The audit file has been altered.')}
+else if(d.acsv){const H=['ts','user','role','sheet','ref','action','field','old','new','note','prev_status'],q=v=>'"'+String(v??'').replace(/"/g,'""')+'"',b=new Blob([H.join(',')+'\n'+AUD.rows.map(r=>H.map(h=>q(r[h])).join(',')).join('\n')],{type:'text/csv'}),a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='audit_report_'+today+'.csv';a.click()}
+else if(d.nu){const g=i=>document.getElementById(i).value;await api('users/create',{username:g('nu1'),password:g('nu2'),role:g('nu3')});USR=null;render()}
+else if(d.up){const p=prompt('New password for '+d.up+' (min 8 characters)');if(p){await api('users/update',{username:d.up,password:p});alert('Password updated')}}
+}catch(x){if(x.message!=='auth')alert(x.message)}});
+document.addEventListener('change',async e=>{const t=e.target,d=t.dataset;try{
+if(d.aq!==undefined){AQ=t.value;render()}
+else if(d.ur)await api('users/update',{username:d.ur,role:t.value});
+else if(d.ua)await api('users/update',{username:d.ua,active:t.checked});
+}catch(x){if(x.message!=='auth')alert(x.message);USR=null;render()}});
+setInterval(()=>{if(ROLE&&!inflight&&!(document.activeElement&&document.activeElement.closest('td')))pull().catch(()=>{})},30000);
+boot();
+
+</script></body></html>
